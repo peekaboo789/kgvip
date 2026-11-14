@@ -2,15 +2,29 @@ name: build
 on: [push, workflow_dispatch]
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Install iOS toolchain
+        run: |
+          set -e
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq clang lld make git curl unzip
+          git clone --depth 1 https://github.com/theos/sdks.git "$RUNNER_TEMP/sdks"
+          ls "$RUNNER_TEMP/sdks" | head -20
       - name: Build dylib
         run: |
           set -e
-          SDK=$(xcrun --sdk iphoneos --show-sdk-path)
-          xcrun --sdk iphoneos clang -arch arm64 -arch arm64e -miphoneos-version-min=14.0 -dynamiclib -fobjc-arc -framework Foundation -isysroot "$SDK" -o KGVip.dylib KGVip.m
-          lipo -info KGVip.dylib
+          SDK=$(ls -d "$RUNNER_TEMP"/sdks/iPhoneOS*.sdk | sort -V | tail -1)
+          echo "using $SDK"
+          for ARCH in arm64 arm64e; do
+            clang -target ${ARCH}-apple-ios14.0 -isysroot "$SDK" \
+              -fobjc-arc -dynamiclib -O2 \
+              -framework Foundation -framework CoreFoundation \
+              -o "KGVip-${ARCH}.dylib" KGVip.m
+          done
+          lipo -create KGVip-arm64.dylib KGVip-arm64e.dylib -output KGVip.dylib 2>/dev/null || cp KGVip-arm64.dylib KGVip.dylib
+          file KGVip.dylib
           ls -la KGVip.dylib
       - uses: actions/upload-artifact@v4
         with:
