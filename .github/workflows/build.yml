@@ -5,6 +5,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Inject credentials
+        env:
+          KG_TOKEN: ${{ secrets.KG_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import os
+          p = 'KGVip.m'
+          s = open(p, encoding='utf-8').read()
+          token = os.environ.get('KG_TOKEN', '')
+          if not token:
+              raise SystemExit('KG_TOKEN secret missing')
+          s = s.replace('__KG_TOKEN__', token)
+          open(p, 'w', encoding='utf-8').write(s)
+          assert token in open(p, encoding='utf-8').read()
+          PY
       - name: Install iOS toolchain
         run: |
           set -e
@@ -17,13 +32,10 @@ jobs:
           set -e
           SDK=$(ls -d "$RUNNER_TEMP"/sdks/iPhoneOS*.sdk | sort -V | tail -1)
           echo "using $SDK"
-          for ARCH in arm64 arm64e; do
-            clang -target ${ARCH}-apple-ios14.0 -isysroot "$SDK" \
-              -fobjc-arc -dynamiclib -O2 \
-              -framework Foundation -framework CoreFoundation \
-              -o "KGVip-${ARCH}.dylib" KGVip.m
-          done
-          lipo -create KGVip-arm64.dylib KGVip-arm64e.dylib -output KGVip.dylib 2>/dev/null || cp KGVip-arm64.dylib KGVip.dylib
+          clang -target arm64-apple-ios14.0 -isysroot "$SDK" \
+            -fobjc-arc -dynamiclib -O2 \
+            -framework Foundation -framework CoreFoundation \
+            -o KGVip.dylib KGVip.m
           file KGVip.dylib
           ls -la KGVip.dylib
       - uses: actions/upload-artifact@v4

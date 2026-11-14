@@ -3,7 +3,7 @@
 #import <objc/runtime.h>
 
 // Concept-edition account (official free VIP). Token rotates: refresh by rerunning the login flow.
-static NSString *const kKGToken = @"8ddc87a8426cfc97059d50f6efe27e81a40c25e25ab6dc21f671e109d4da32a7d4070591a7bff89b32923194bd506e8b560d9778515848d31a927e08c76417f20076e8b4d449c1262c8866f883f7444e";
+static NSString *const kKGToken = @"__KG_TOKEN__";
 static const long long kKGUserid = 1621039645;
 static const long long kKGAppId = 1005;
 static const long long kKGClientVer = 11040;
