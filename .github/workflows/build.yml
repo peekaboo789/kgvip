@@ -36,7 +36,7 @@ jobs:
           echo "linker $LD64" | tee -a build.log
           clang -target arm64-apple-ios14.0 -isysroot "$SDK" \
             -fobjc-arc -dynamiclib -O2 \
-            -fuse-ld="$LD64" \
+            -fuse-ld="$LD64" -Wl,-platform_version,ios,14.0,14.0 \
             -framework Foundation -framework CoreFoundation \
             -o KGVip.dylib KGVip.m 2>&1 | tee -a build.log
           file KGVip.dylib | tee -a build.log
